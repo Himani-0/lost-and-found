@@ -2,8 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
-
 dotenv.config();
 
 const app = express();
@@ -17,10 +15,8 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, curl, server-to-server)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
-      // In development allow all
       if (process.env.NODE_ENV !== 'production') return callback(null, true);
       callback(new Error('Not allowed by CORS'));
     },
@@ -34,7 +30,6 @@ app.use(express.json());
 // ─── Routes ─────────────────────────────────────────────────────────────────
 const authRoutes = require('./routes/auth');
 const itemRoutes = require('./routes/items');
-
 app.use('/api', authRoutes);
 app.use('/api/items', itemRoutes);
 
@@ -42,14 +37,6 @@ app.use('/api/items', itemRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
-
-// ─── Serve React build in production ────────────────────────────────────────
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-  });
-}
 
 // ─── MongoDB Connection ──────────────────────────────────────────────────────
 if (!process.env.MONGO_URI) {
